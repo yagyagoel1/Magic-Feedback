@@ -5,9 +5,8 @@ import { sendVerificationEmail } from "@/helpers/sendVerificationEmail";
 import { signUpSchema } from "@/schemas/signUpSchema";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
+    await dbConnect();
     const { username, email, password } = await request.json();
     const isValid = signUpSchema.safeParse({ username, email, password });
     if (!isValid) throw new Error("signup schema failed");
@@ -16,6 +15,7 @@ export async function POST(request: Request) {
       username,
       isVerified: true,
     });
+
     if (existingUserVerifiedByUsername)
       return Response.json(
         {
@@ -27,6 +27,7 @@ export async function POST(request: Request) {
         }
       );
     const existingUserByEmail = await UserModel.findOne({ email });
+
     const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();
     if (existingUserByEmail) {
       if (existingUserByEmail.isVerified) {
@@ -59,32 +60,32 @@ export async function POST(request: Request) {
         messages: [],
       });
       await newUser.save();
-      const emailResponse = await sendVerificationEmail(
-        email,
-        username,
-        verifyCode
-      );
-      if (!emailResponse.success) {
-        return Response.json(
-          {
-            success: false,
-            message: emailResponse.message,
-          },
-          {
-            status: 500,
-          }
-        );
-      }
+    }
+    const emailResponse = await sendVerificationEmail(
+      email,
+      username,
+      verifyCode
+    );
+    if (!emailResponse.success) {
       return Response.json(
         {
-          success: true,
-          message: "User Registered successfully.Please verify your email",
+          success: false,
+          message: emailResponse.message,
         },
         {
-          status: 201,
+          status: 500,
         }
       );
     }
+    return Response.json(
+      {
+        success: true,
+        message: "User Registered successfully.Please verify your email",
+      },
+      {
+        status: 201,
+      }
+    );
   } catch (error) {
     console.error("error registering user", error);
     return Response.json(
