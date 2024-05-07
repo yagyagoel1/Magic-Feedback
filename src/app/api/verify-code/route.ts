@@ -1,6 +1,5 @@
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User.model";
-import { usernameValidation } from "@/schemas/signUpSchema";
 import { verifySchema } from "@/schemas/verifySchema";
 
 export async function POST(request: Request) {
@@ -8,9 +7,8 @@ export async function POST(request: Request) {
   try {
     const { username, code } = await request.json();
     const decodedUsername = decodeURIComponent(username);
-    const usernameCheck = usernameValidation.safeParse(username);
-    const codeCheck = verifySchema.safeParse(code);
-    if (!codeCheck.success || !username.success) {
+    const codeCheck = verifySchema.safeParse({ username, code });
+    if (!codeCheck.success) {
       return Response.json(
         {
           success: false,
