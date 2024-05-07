@@ -31,7 +31,7 @@ const verifyAccount = () => {
             title:"Success",
             description:response.data.messsage
             })
-            router.replace("sign-in")
+            router.replace("/sign-in")
 
         } catch (error) {
              console.error("Error in verifying user",error)
